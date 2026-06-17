@@ -54,3 +54,4 @@ artifacts:
 cache:
   paths:
     - '/root/.m2/**/*'  # Cache du repository Maven local
+# buildspec v1 - version initiale
