@@ -1,0 +1,101 @@
+# Version du format AWS CodeBuild (0.2 = standard actuel stable)
+version: 0.2
+
+# Variables d'environnement globales utilisées dans le build
+env:
+  variables:
+    # Augmente la mémoire Maven pour éviter OutOfMemoryError sur gros projets
+    MAVEN_OPTS: "-Xmx2048m"
+
+# Définition des phases du pipeline CI/CD
+phases:
+
+  # =========================
+  # INSTALL PHASE
+  # =========================
+  install:
+    runtime-versions:
+      # Définit la version Java utilisée dans le conteneur CodeBuild
+      java: corretto21
+
+    commands:
+      # Affiche la version Java pour debug et traçabilité
+      - echo "Java version check"
+      - java -version
+
+      # Affiche la version Maven pour vérifier l’environnement CI
+      - echo "Maven version check"
+      - mvn -version
+
+  # =========================
+  # PRE_BUILD PHASE
+  # =========================
+  pre_build:
+    commands:
+      # Message log pour suivre l’étape dans CloudWatch
+      - echo "Resolving Maven dependencies (offline mode preparation)"
+
+      # Télécharge toutes les dépendances avant build pour accélérer CI
+      - mvn dependency:go-offline
+
+  # =========================
+  # BUILD PHASE
+  # =========================
+  build:
+    commands:
+      # Log de début du build
+      - echo "Starting full build: compile + test + package + coverage"
+
+      # Nettoie le projet, compile, lance tests, package, et exécute JaCoCo
+      - mvn clean verify
+
+      # Optionnel : exécute analyse de bugs statiques (si plugin ajouté dans pom.xml)
+      - mvn spotbugs:check || true
+
+  # =========================
+  # POST_BUILD PHASE
+  # =========================
+  post_build:
+    commands:
+      # Log final du build
+      - echo "Build finished successfully - artifacts ready"
+
+# =========================
+# ARTIFACTS (output build)
+# =========================
+artifacts:
+  files:
+    # Fichier JAR généré par Spring Boot (application finale)
+    - target/*.jar
+
+    # Rapport de couverture de code JaCoCo (HTML + XML)
+    - target/site/jacoco/**/*
+
+    # Résultats des tests unitaires Maven (Surefire)
+    - target/surefire-reports/**/*
+
+  # Conserve la structure des dossiers (important pour debug et reporting)
+  discard-paths: no
+
+# =========================
+# REPORTING (AWS CodeBuild UI)
+# =========================
+reports:
+  junit-reports:
+    # Capture tous les fichiers XML de tests JUnit
+    files:
+      - "**/TEST-*.xml"
+
+    # Dossier où Maven Surefire génère les résultats de tests
+    base-directory: target/surefire-reports
+
+    # Format compris par AWS pour affichage dashboard tests
+    file-format: JUNITXML
+
+# =========================
+# CACHE (performance CI/CD)
+# =========================
+cache:
+  paths:
+    # Cache local Maven repository pour éviter re-download dependencies
+    - /root/.m2/**/*
