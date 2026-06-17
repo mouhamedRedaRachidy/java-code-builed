@@ -1,0 +1,56 @@
+# buildspec.yml — Fichier de configuration pour AWS CodeBuild
+# Il décrit les étapes de build, les conteneurs utilisés, et les artefacts générés.
+
+version: 0.2  # Version du format buildspec (0.2 = recommandée)
+
+# ===== Environnement d'exécution =====
+# Définit le conteneur Docker utilisé pour le build
+phases:
+  # === Phase d'installation ===
+  # S'exécute avant le build principal
+  install:
+    runtime-versions:
+      java: corretto21  # JDK Amazon Corretto 21 dans le conteneur
+    # Commandes supplémentaires d'installation
+    commands:
+      - echo "Installation des dépendances terminée"
+
+  # === Phase de pré-build ===
+  # S'exécute avant la compilation (téléchargement des dépendances)
+  pre_build:
+    commands:
+      - echo "Téléchargement des dépendances Maven..."
+      - mvn dependency:resolve  # Résout et télécharge les dépendances
+
+  # === Phase de build ===
+  # Compilation et tests du projet
+  build:
+    commands:
+      - echo "Compilation et exécution des tests..."
+      - mvn clean test  # Nettoie, compile et lance les tests
+
+  # === Phase post-build ===
+  # S'exécute après le build (rapports, notifications)
+  post_build:
+    commands:
+      - echo "Build terminé avec succès"
+    # Rapports de test (optionnel — affichés dans la console AWS CodeBuild)
+    reports:
+      surefire:
+        files:
+          - '**/TEST-*.xml'
+        base-directory: 'target/surefire-reports'
+
+# ===== Fichiers générés (artefacts) =====
+# Ce qui sera conservé après le build
+artifacts:
+  files:
+    - 'target/*.jar'       # Le JAR généré par Maven
+    - 'target/site/**/*'   # Les rapports JaCoCo (couverture de code)
+  discard-paths: no        # Garde la structure des répertoires
+
+# ===== Cache =====
+# Accélère les builds suivants en cachant ~/.m2
+cache:
+  paths:
+    - '/root/.m2/**/*'  # Cache du repository Maven local

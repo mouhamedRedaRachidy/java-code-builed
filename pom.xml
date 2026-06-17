@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  pom.xml — Fichier de configuration principal de Maven (Project Object Model).
+  Il décrit le projet, ses dépendances et sa configuration de build.
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- modelVersion : Version du modèle POM. Toujours 4.0.0 pour Maven 2/3 -->
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ===== Coordonnées du projet (GAV) ===== -->
+    <!-- groupId : Identifiant du groupe (inverse du nom de domaine) -->
+    <groupId>com.rachidy</groupId>
+    <!-- artifactId : Nom du projet (sera le nom du JAR généré) -->
+    <artifactId>java-codebuild</artifactId>
+    <!-- version : Version du projet. SNAPSHOT = en développement -->
+    <version>1.0-SNAPSHOT</version>
+
+    <!-- ===== Propriétés globales ===== -->
+    <properties>
+        <!-- Version de la syntaxe Java source (le code qu'on écrit) -->
+        <maven.compiler.source>21</maven.compiler.source>
+        <!-- Version de la JVM cible (où le code va tourner) -->
+        <maven.compiler.target>21</maven.compiler.target>
+        <!-- Encodage des fichiers source (UTF-8 recommandé) -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <!-- ===== Configuration du build ===== -->
+    <build>
+        <plugins>
+            <!--
+              maven-surefire-plugin : Plugin qui exécute les tests unitaires
+              Version 3.2.5 = compatible avec JUnit 5 (Jupiter)
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
+
+            <!--
+              jacoco-maven-plugin : Plugin de couverture de code (code coverage).
+              Génère un rapport HTML/XML indiquant quelles lignes sont couvertes par les tests.
+              jacoco:prepare-agent → attache l'agent JaCoCo à la JVM avant les tests
+              jacoco:report → génère le rapport après les tests
+            -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- ===== Dépendances ===== -->
+    <dependencies>
+        <!--
+          JUnit Jupiter 5.10.0 : Framework de tests unitaires.
+          scope = test → n'est incluse QUE pour la compilation et l'exécution des tests,
+          pas dans le JAR final de production.
+        -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>
